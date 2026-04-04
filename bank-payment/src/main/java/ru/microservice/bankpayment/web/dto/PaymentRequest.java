@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import ru.microservice.bankpayment.domain.enums.RecipientType;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public record PaymentRequest (
 
@@ -20,6 +21,8 @@ public record PaymentRequest (
     BigDecimal amount,
 
     @NotNull(message = "Тип получателя обязателен")
-    RecipientType recipientType
+    RecipientType recipientType,
+
+    LocalDateTime scheduledAt
 ) {
 }

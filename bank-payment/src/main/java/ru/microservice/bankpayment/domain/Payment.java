@@ -44,4 +44,6 @@ public class Payment {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private LocalDateTime scheduledAt;
 }

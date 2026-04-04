@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.microservice.bankaccount.db.AccountRepository;
 import ru.microservice.bankaccount.domain.Account;
 import ru.microservice.bankaccount.domain.enums.AccountStatus;
+import ru.microservice.bankaccount.exception.AccountNotFoundException;
 import ru.microservice.bankaccount.service.utils.GeneratorAccountsNumber;
 import ru.microservice.bankaccount.web.dto.AccountRequest;
 import ru.microservice.bankaccount.web.dto.AccountResponse;
@@ -41,7 +42,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public AccountResponse getAccountById(Long id) {
         return accountMapper.toResponse(accountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Счёт не найден: " + id)));
+                .orElseThrow(() -> new AccountNotFoundException(id)));
     }
 
 }

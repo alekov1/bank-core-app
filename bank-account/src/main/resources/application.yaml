@@ -1,0 +1,24 @@
+spring:
+
+  datasource:
+    name: bank-account
+    url: jdbc:postgresql://localhost:5433/bankdb?currentSchema=account_schema
+    username: postgres
+    password: 1234
+    driver-class-name: org.postgresql.Driver
+
+
+  liquibase:
+    change-log: classpath:liquibase/db.changelog.yaml
+    enabled: true
+    default-schema: account_schema
+
+
+  jpa:
+    hibernate.ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: account_schema
+

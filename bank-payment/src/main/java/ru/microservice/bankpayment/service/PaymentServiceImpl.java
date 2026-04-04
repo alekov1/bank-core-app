@@ -3,56 +3,68 @@ package ru.microservice.bankpayment.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.microservice.bankaccount.db.AccountRepository;
-import ru.microservice.bankaccount.domain.Account;
+import ru.microservice.bankpayment.client.AccountClient;
 import ru.microservice.bankpayment.db.PaymentRepository;
 import ru.microservice.bankpayment.domain.Payment;
 import ru.microservice.bankpayment.domain.enums.PaymentStatus;
+import ru.microservice.bankpayment.exception.InsufficientFundsException;
+import ru.microservice.bankpayment.web.dto.AccountDto;
 import ru.microservice.bankpayment.web.dto.PaymentRequest;
 import ru.microservice.bankpayment.web.dto.PaymentResponse;
+import ru.microservice.bankpayment.web.dto.mapper.PaymentMapper;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 
 @Service
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
-    private final AccountRepository accountRepository;
+    private final AccountClient accountClient;
     private final PaymentRepository paymentRepository;
-
-    private static final DateTimeFormatter FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final PaymentMapper paymentMapper;
 
     @Override
     @Transactional
     public PaymentResponse transfer(PaymentRequest request) {
 
-        Account from = accountRepository.findByAccountNumber(request.fromAccountNumber())
-                .orElseThrow(() -> new RuntimeException(
-                        "Счет отправителя не найден: " + request.fromAccountNumber()
-                ));
+        if (request.scheduledAt() == null) {
+            return scheduledPayment(request);
+        }
+        return executeTransfer(request);
+    }
 
-        Account to = accountRepository.findByAccountNumber(request.toAccountNumber())
-                .orElseThrow(() -> new RuntimeException(
-                        "Счет получателя не найден: " + request.fromAccountNumber()
-                ));
+    private PaymentResponse scheduledPayment(PaymentRequest request) {
+        Payment scheduledPayment = buildPayment(request, PaymentStatus.PENDING);
+        return paymentMapper.toResponse(paymentRepository.save(scheduledPayment));
+
+    }
+
+    @Override
+    @Transactional
+    public void executeScheduled(Payment payment) {
+        executeTransfer(paymentMapper.toRequest(payment));
+    }
+
+    private PaymentResponse executeTransfer(PaymentRequest request) {
+
+        AccountDto from = accountClient.getAccountByNumber(request.fromAccountNumber());
+        AccountDto to = accountClient.getAccountByNumber(request.toAccountNumber());
 
         if (from.getBalance().compareTo(request.amount()) < 0) {
-            throw new RuntimeException("Недостаточно средств");
+            throw new InsufficientFundsException("Недостаточно средств");
         }
 
         from.setBalance(from.getBalance().subtract(request.amount()));
         to.setBalance(to.getBalance().add(request.amount()));
 
-        accountRepository.save(from);
-        accountRepository.save(to);
+        accountClient.updateBalance(from.getAccountNumber(), request.amount().negate());
+        accountClient.updateBalance(to.getAccountNumber(), request.amount());
 
         Payment payment = buildPayment(request, PaymentStatus.SUCCESS);
         Payment saved = paymentRepository.save(payment);
 
-        return toResponse(saved);
+        return paymentMapper.toResponse(saved);
     }
 
     private Payment buildPayment(PaymentRequest request, PaymentStatus status) {
@@ -66,16 +78,5 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
-    private PaymentResponse toResponse(Payment payment) {
-        return new PaymentResponse(
-                payment.getId(),
-                payment.getFromAccountNumber(),
-                payment.getToAccountNumber(),
-                payment.getAmount(),
-                payment.getStatus(),
-                payment.getRecipientType(),
-                payment.getFailureReason(),
-                payment.getCreatedAt().format(FORMATTER)
-        );
-    }
+
 }
