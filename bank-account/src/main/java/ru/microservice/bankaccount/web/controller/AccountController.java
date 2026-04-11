@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.microservice.bankaccount.service.AccountService;
 import ru.microservice.bankaccount.web.dto.AccountRequest;
 import ru.microservice.bankaccount.web.dto.AccountResponse;
+import ru.microservice.bankaccount.web.dto.AccountTransferRequest;
+import ru.microservice.bankaccount.web.dto.AccountTransferResponse;
 
 @RestController
 @RequestMapping("/api/v1/account")
@@ -29,5 +31,13 @@ public class AccountController {
     public ResponseEntity<AccountResponse> getAccount(@PathVariable Long id) {
         return ResponseEntity.ok(accountService.getAccountById(id));
     }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<AccountTransferResponse> transferAccount(@RequestBody @Valid AccountTransferRequest accountRequest) {
+        return ResponseEntity.ok(accountService.transferAccount(accountRequest));
+    }
+
+
+
 
 }

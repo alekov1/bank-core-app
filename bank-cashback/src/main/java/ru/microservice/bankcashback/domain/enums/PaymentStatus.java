@@ -1,4 +1,4 @@
-package ru.microservice.bankpayment.domain.enums;
+package ru.microservice.bankcashback.domain.enums;
 
 public enum PaymentStatus {
 

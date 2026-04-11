@@ -2,13 +2,17 @@ package ru.microservice.bankaccount.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.microservice.bankaccount.db.AccountRepository;
 import ru.microservice.bankaccount.domain.Account;
 import ru.microservice.bankaccount.domain.enums.AccountStatus;
 import ru.microservice.bankaccount.exception.AccountNotFoundException;
+import ru.microservice.bankaccount.exception.InsufficientFundsException;
 import ru.microservice.bankaccount.service.utils.GeneratorAccountsNumber;
 import ru.microservice.bankaccount.web.dto.AccountRequest;
 import ru.microservice.bankaccount.web.dto.AccountResponse;
+import ru.microservice.bankaccount.web.dto.AccountTransferRequest;
+import ru.microservice.bankaccount.web.dto.AccountTransferResponse;
 import ru.microservice.bankaccount.web.dto.mapper.AccountMapper;
 
 import java.math.BigDecimal;
@@ -45,4 +49,41 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new AccountNotFoundException(id)));
     }
 
+    @Override
+    @Transactional
+    public AccountTransferResponse transferAccount(AccountTransferRequest request) {
+
+        Account from = accountRepository.findByAccountNumber(request.fromAccountNumber())
+                .orElseThrow(() -> new AccountNotFoundException(request.fromAccountNumber()));
+        Account to = accountRepository.findByAccountNumber(request.toAccountNumber())
+                .orElseThrow(() -> new AccountNotFoundException(request.toAccountNumber()));
+
+        if (from.getBalance().compareTo(request.amount()) < 0) {
+            throw new InsufficientFundsException("Недостаточно средств");
+        }
+        try {
+            from.setBalance(from.getBalance().subtract(request.amount()));
+            to.setBalance(to.getBalance().add(request.amount()));
+
+            accountRepository.save(from);
+            accountRepository.save(to);
+
+            return new AccountTransferResponse(
+                    from.getAccountNumber(),
+                    to.getAccountNumber(),
+                    request.amount(),
+                    "SUCCESS",
+                    null
+            );
+        } catch (Exception e) {
+            return new AccountTransferResponse(
+                    from.getAccountNumber(),
+                    to.getAccountNumber(),
+                    request.amount(),
+                    "FAILURE",
+                    e.getMessage()
+            );
+        }
+
+    }
 }
