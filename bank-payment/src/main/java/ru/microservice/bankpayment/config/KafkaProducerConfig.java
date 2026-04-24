@@ -10,7 +10,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 import ru.microservice.bankpayment.domain.Payment;
-import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
@@ -26,13 +25,21 @@ public class KafkaProducerConfig {
     ) {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        configProps.put(ProducerConfig.ACKS_CONFIG, "all");
+        configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        configProps.put(ProducerConfig.RETRIES_CONFIG, 10);
+        configProps.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, 120_000);
+        configProps.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 30_000);
+        configProps.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 5);
 
         JacksonJsonSerializer<Payment> serializer = new JacksonJsonSerializer<>(jsonMapper);
 
-        return new DefaultKafkaProducerFactory<>(
+        DefaultKafkaProducerFactory<String, Payment> factory = new DefaultKafkaProducerFactory<>(
                 configProps,
                 new StringSerializer(),
                 serializer);
+        factory.setTransactionIdPrefix("bank-payment-tx-");
+        return factory;
     }
 
     @Bean

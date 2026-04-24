@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.microservice.bankaccount.db.AccountRepository;
 import ru.microservice.bankaccount.domain.Account;
 import ru.microservice.bankaccount.domain.enums.AccountStatus;
+import ru.microservice.bankaccount.domain.enums.TransactionalStatus;
 import ru.microservice.bankaccount.exception.AccountNotFoundException;
 import ru.microservice.bankaccount.exception.InsufficientFundsException;
 import ru.microservice.bankaccount.service.utils.GeneratorAccountsNumber;
@@ -68,21 +69,21 @@ public class AccountServiceImpl implements AccountService {
             accountRepository.save(from);
             accountRepository.save(to);
 
-            return new AccountTransferResponse(
-                    from.getAccountNumber(),
-                    to.getAccountNumber(),
-                    request.amount(),
-                    "SUCCESS",
-                    null
-            );
+            return AccountTransferResponse.builder()
+                    .fromAccountNumber(from.getAccountNumber())
+                    .toAccountNumber(to.getAccountNumber())
+                    .amount(request.amount())
+                    .status(TransactionalStatus.SUCCESS.toString())
+                    .error(null)
+                    .build();
         } catch (Exception e) {
-            return new AccountTransferResponse(
-                    from.getAccountNumber(),
-                    to.getAccountNumber(),
-                    request.amount(),
-                    "FAILURE",
-                    e.getMessage()
-            );
+            return AccountTransferResponse.builder()
+                    .fromAccountNumber(from.getAccountNumber())
+                    .toAccountNumber(to.getAccountNumber())
+                    .amount(request.amount())
+                    .status(TransactionalStatus.FAILURE.toString())
+                    .error(e.getMessage())
+                    .build();
         }
 
     }

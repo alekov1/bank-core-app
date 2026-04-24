@@ -8,7 +8,7 @@ import ru.microservice.bankpayment.client.AccountClient;
 import ru.microservice.bankpayment.db.PaymentRepository;
 import ru.microservice.bankpayment.domain.Payment;
 import ru.microservice.bankpayment.domain.enums.PaymentStatus;
-import ru.microservice.bankpayment.service.kafka.PaymentKafkaProducer;
+import ru.microservice.bankpayment.service.kafka.PaymentOutboxService;
 import ru.microservice.bankpayment.web.dto.AccountTransferRequest;
 import ru.microservice.bankpayment.web.dto.PaymentRequest;
 import ru.microservice.bankpayment.web.dto.PaymentResponse;
@@ -25,7 +25,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final AccountClient accountClient;
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
-    private final PaymentKafkaProducer paymentKafkaProducer;
+    private final PaymentOutboxService paymentOutboxService;
 
     @Override
     @Transactional
@@ -56,8 +56,8 @@ public class PaymentServiceImpl implements PaymentService {
             ));
 
             payment.setStatus(PaymentStatus.SUCCESS);
-            paymentRepository.save(payment);
-            paymentKafkaProducer.sendPaymentToKafka(payment);
+            Payment saved = paymentRepository.save(payment);
+            paymentOutboxService.saveEvent(saved);
 
         } catch (Exception ex) {
 
@@ -78,7 +78,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             Payment payment = buildPayment(request, PaymentStatus.SUCCESS);
             Payment saved = paymentRepository.save(payment);
-            paymentKafkaProducer.sendPaymentToKafka(payment);
+            paymentOutboxService.saveEvent(saved);
 
             return paymentMapper.toResponse(saved);
 

@@ -12,6 +12,6 @@ public class AccountNotFoundException extends RuntimeException {
     }
 
     public AccountNotFoundException(@NotBlank(message = "Счёт отправителя обязателен") String s) {
-        super("Счёт с номером " + s + " не найден");
+        super(String.format("Счёт с номером %s не найден", s));
     }
 }

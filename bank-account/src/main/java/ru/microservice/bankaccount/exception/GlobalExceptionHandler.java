@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInsufficientFunds(InsufficientFundsException ex) {
         ErrorResponse error = new ErrorResponse(
                 LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
+                HttpStatus.BAD_REQUEST.value(),
                 "Insufficient Funds",
                 ex.getMessage()
         );
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
         ErrorResponse error = new ErrorResponse(
                 LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.BAD_REQUEST.value(),
                 "Internal Server Error",
                 "Ошибка"
         );
