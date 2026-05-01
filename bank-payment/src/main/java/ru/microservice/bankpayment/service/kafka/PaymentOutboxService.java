@@ -1,6 +1,7 @@
 package ru.microservice.bankpayment.service.kafka;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.microservice.bankpayment.db.PaymentOutboxRepository;
 import ru.microservice.bankpayment.domain.Payment;
@@ -16,11 +17,14 @@ public class PaymentOutboxService {
 
     private final PaymentOutboxRepository paymentOutboxRepository;
 
+    @Value("${send.kafka.topic}")
+    private String topic;
+
     public void saveEvent(Payment payment) {
         PaymentOutboxEvent event = PaymentOutboxEvent.builder()
                 .eventId(UUID.randomUUID())
                 .paymentId(payment.getId())
-                .topic("${send.kafka.topic}")
+                .topic(topic)
                 .status(OutboxStatus.NEW)
                 .attempts(0)
                 .nextRetryAt(LocalDateTime.now())

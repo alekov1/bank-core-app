@@ -17,6 +17,7 @@ public class PaymentKafkaProducer {
     private final KafkaTemplate<String, Payment> kafkaTemplate;
 
 
+
     public void sendPaymentToKafka(PaymentOutboxEvent event, Payment payment) {
         kafkaTemplate.executeInTransaction(operations -> {
             ProducerRecord<String, Payment> record = new ProducerRecord<>(

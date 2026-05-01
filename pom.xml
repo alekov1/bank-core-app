@@ -18,6 +18,8 @@
     <modules>
         <module>bank-account</module>
         <module>bank-payment</module>
+        <module>bank-cashback</module>
+        <module>bank-notification</module>
     </modules>
 
 	<properties>

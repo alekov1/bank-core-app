@@ -41,4 +41,5 @@ public class ProcessedKafkaMessage {
 
     @Column(nullable = false)
     private LocalDateTime processedAt;
+
 }

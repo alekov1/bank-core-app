@@ -8,6 +8,9 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import ru.microservice.bankcashback.db.FailedKafkaMessageRepository;
 import ru.microservice.bankcashback.db.PaymentRepository;
 import ru.microservice.bankcashback.db.ProcessedKafkaMessageRepository;
@@ -29,6 +32,7 @@ public class PaymentKafkaConsumer {
     private final ProcessedKafkaMessageRepository processedKafkaMessageRepository;
     private final FailedKafkaMessageRepository failedKafkaMessageRepository;
     private final ObjectMapper objectMapper;
+
 
     @KafkaListener(topics = "payments")
     @Transactional
@@ -60,11 +64,19 @@ public class PaymentKafkaConsumer {
                     .offsetValue(record.offset())
                     .processedAt(LocalDateTime.now())
                     .build());
-            acknowledgment.acknowledge();
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+                @Override
+                public void afterCommit() {
+                    acknowledgment.acknowledge();
+                    log.info("Payment consumed and offset committed, messageId={}", messageId);
+                }
+            });
+
+
             log.info("Payment consumed successfully, messageId={}", messageId);
         } catch (Exception ex) {
             saveFailedMessage(messageId, record, rawData, ex.getMessage());
-            acknowledgment.acknowledge();
             log.error("Failed to consume payment, messageId={}", messageId, ex);
         }
     }

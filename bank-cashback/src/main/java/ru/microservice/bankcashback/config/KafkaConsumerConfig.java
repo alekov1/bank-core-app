@@ -2,6 +2,7 @@ package ru.microservice.bankcashback.config;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.listener.ContainerProperties;
@@ -18,14 +19,24 @@ import java.util.Map;
 @Configuration
 public class KafkaConsumerConfig {
 
+    @Value("${kafka.cashback.prop.bootstrapServers}")
+    private String bootstrapServers;
+    @Value("${kafka.cashback.prop.groupId}")
+    private String groupId;
+    @Value("${kafka.cashback.prop.intervalBackOff}")
+    private Integer intervalBackOff;
+    @Value("${kafka.cashback.prop.maxAttemptsBackOff}")
+    private Integer maxAttemptsBackOff;
+
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "bank-cashback-payments");
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
+
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false); // для чего нужно
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"); // для чего нужно
+        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed"); // посмотреть нужно или нет
 
         return new DefaultKafkaConsumerFactory<>(
                 props,
@@ -35,7 +46,7 @@ public class KafkaConsumerConfig {
 
     @Bean
     public DefaultErrorHandler errorHandler() {
-        FixedBackOff backOff = new FixedBackOff(5_000L, 3L);
+        FixedBackOff backOff = new FixedBackOff(intervalBackOff, maxAttemptsBackOff);
         DefaultErrorHandler handler = new DefaultErrorHandler(backOff);
         handler.addNotRetryableExceptions(NonRetryableException.class);
         return handler;

@@ -56,4 +56,5 @@ public class PaymentOutboxEvent {
     private LocalDateTime sentAt;
 
     private String errorMessage;
+
 }
