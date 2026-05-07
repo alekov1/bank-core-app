@@ -27,6 +27,11 @@ public class AccountController {
                 .body(accountService.createAccount(accountRequest));
     }
 
+    @GetMapping("/email")
+    public String getEmailByAccountNumber(@RequestParam("accountNumber") String accountNumber) {
+        return accountService.getEmailByAccountNumber(accountNumber);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<AccountResponse> getAccount(@PathVariable Long id) {
         return ResponseEntity.ok(accountService.getAccountById(id));

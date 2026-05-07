@@ -22,3 +22,15 @@ spring:
         format_sql: true
         default_schema: account_schema
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true

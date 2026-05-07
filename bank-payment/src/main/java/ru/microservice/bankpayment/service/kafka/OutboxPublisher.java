@@ -28,6 +28,7 @@ public class OutboxPublisher {
     private final PaymentKafkaProducer paymentKafkaProducer;
 
     @Scheduled(fixedDelay = 5_000)
+    @Transactional
     public void publish() {
         List<PaymentOutboxEvent> events = paymentOutboxRepository.findReadyForPublishing(
                 List.of(OutboxStatus.NEW, OutboxStatus.FAILED),

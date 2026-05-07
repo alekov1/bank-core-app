@@ -27,6 +27,9 @@ public class Account {
     private String accountNumber;
 
     @Column(nullable = false)
+    private String email;
+
+    @Column(nullable = false)
     private BigDecimal balance;
 
     @Enumerated(EnumType.STRING)

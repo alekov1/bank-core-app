@@ -34,9 +34,9 @@ public class KafkaConsumerConfig {
 
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false); // для чего нужно
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest"); // для чего нужно
-        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed"); // посмотреть нужно или нет
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
 
         return new DefaultKafkaConsumerFactory<>(
                 props,

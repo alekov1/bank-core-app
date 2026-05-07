@@ -4,10 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import ru.microservice.banknotification.domain.EmailType;
 import ru.microservice.bankpayment.client.AccountClient;
 import ru.microservice.bankpayment.db.PaymentRepository;
 import ru.microservice.bankpayment.domain.Payment;
 import ru.microservice.bankpayment.domain.enums.PaymentStatus;
+import ru.microservice.bankpayment.service.clientservice.NotificationAsyncService;
 import ru.microservice.bankpayment.service.kafka.PaymentOutboxService;
 import ru.microservice.bankpayment.web.dto.AccountTransferRequest;
 import ru.microservice.bankpayment.web.dto.PaymentRequest;
@@ -15,6 +19,7 @@ import ru.microservice.bankpayment.web.dto.PaymentResponse;
 import ru.microservice.bankpayment.web.dto.mapper.PaymentMapper;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Slf4j
@@ -26,6 +31,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
     private final PaymentOutboxService paymentOutboxService;
+    private final NotificationAsyncService notificationAsyncService;
+    private final TransactionCallbackService transactionCallbackService ;
 
     @Override
     @Transactional
@@ -59,6 +66,11 @@ public class PaymentServiceImpl implements PaymentService {
             Payment saved = paymentRepository.save(payment);
             paymentOutboxService.saveEvent(saved);
 
+            transactionCallbackService.afterCommit(List.of(
+                    () -> notificationAsyncService.sendNotificationAsync(EmailType.DEBITING, payment.getFromAccountNumber()),
+                    () -> notificationAsyncService.sendNotificationAsync(EmailType.CREDITING, payment.getToAccountNumber())
+            ));
+
         } catch (Exception ex) {
 
             payment.setStatus(PaymentStatus.FAILED);
@@ -79,6 +91,11 @@ public class PaymentServiceImpl implements PaymentService {
             Payment payment = buildPayment(request, PaymentStatus.SUCCESS);
             Payment saved = paymentRepository.save(payment);
             paymentOutboxService.saveEvent(saved);
+
+            transactionCallbackService.afterCommit(List.of(
+                    () -> notificationAsyncService.sendNotificationAsync(EmailType.DEBITING, payment.getFromAccountNumber()),
+                    () -> notificationAsyncService.sendNotificationAsync(EmailType.CREDITING, payment.getToAccountNumber())
+            ));
 
             return paymentMapper.toResponse(saved);
 

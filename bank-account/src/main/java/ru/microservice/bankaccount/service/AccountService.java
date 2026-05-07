@@ -16,4 +16,5 @@ public interface  AccountService {
 
     AccountTransferResponse transferAccount(AccountTransferRequest request);
 
+    String getEmailByAccountNumber(String accountNumber);
 }
