@@ -3,10 +3,9 @@ package ru.microservice.bankaccount.service;
 
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestBody;
-import ru.microservice.bankaccount.web.dto.AccountRequest;
-import ru.microservice.bankaccount.web.dto.AccountResponse;
-import ru.microservice.bankaccount.web.dto.AccountTransferRequest;
-import ru.microservice.bankaccount.web.dto.AccountTransferResponse;
+import ru.microservice.bankaccount.web.dto.*;
+
+import java.util.concurrent.CompletableFuture;
 
 public interface  AccountService {
 
@@ -17,4 +16,5 @@ public interface  AccountService {
     AccountTransferResponse transferAccount(AccountTransferRequest request);
 
     String getEmailByAccountNumber(String accountNumber);
+    CompletableFuture<BlockResponse> blockAccount(String accountNumber);
 }
