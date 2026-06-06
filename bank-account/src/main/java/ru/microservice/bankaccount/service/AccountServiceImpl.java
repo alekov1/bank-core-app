@@ -2,6 +2,8 @@ package ru.microservice.bankaccount.service;
 
 import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -73,6 +75,7 @@ public class AccountServiceImpl implements AccountService {
 
 
     @Override
+    @Cacheable(value = "accounts", key = "#id")
     public AccountResponse getAccountById(Long id) {
         return accountMapper.toResponse(accountRepository.findById(id)
                 .orElseThrow(() -> new AccountNotFoundException(id)));
@@ -81,6 +84,7 @@ public class AccountServiceImpl implements AccountService {
     @Timed("transfer")
     @Override
     @Transactional
+    @CacheEvict(value = "accounts", allEntries = true)
     public AccountTransferResponse transferAccount(AccountTransferRequest request) {
 
         Account from = accountRepository.findByAccountNumber(request.fromAccountNumber())

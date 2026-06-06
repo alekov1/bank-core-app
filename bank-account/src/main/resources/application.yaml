@@ -1,5 +1,15 @@
 spring:
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000
+
   datasource:
     name: bank-account
     url: jdbc:postgresql://localhost:5433/bankdb?currentSchema=account_schema
